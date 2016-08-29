@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1472446909 source:f:\workspaces\cpp\travelsystem\main.cpp
+	<iostream>
+	<conio.h>
+	<cstdlib>
+
