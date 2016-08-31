@@ -18,7 +18,7 @@ void guide_line();//导游线路
 void DFS(int c);//深度优先搜索导游线路
 void checked();//检查是否存在一个合法的景区景点分布图
 void Num_Name();//打印景点编号与景点名称的对应信息
-//void Floyd(int A[M][M],int path[M],[M]);//Floyd算法
+void Floyd(int A[M][M],int path[M][M]);//Floyd算法
 void Y_N();//选择判断函数
 void check_circuit();//判断回路
 void min_distance();
@@ -43,6 +43,7 @@ Scenic S;
 
 int main()
 {
+    system("color f4");
     Welcome();
     return 0;
 }
@@ -188,24 +189,209 @@ void print_graph()//以邻接矩阵的形式输出景点分布
     returnMainFace();
 }
 
-void guide_line()
-{
-
+//----------------
+//深度优先搜索导游线路
+int visited[M]={0};
+int np=0;//找到的景点个数
+int p[M];//表示各个景点的入度值
+void DFS(int c){
+    //c为景点编号
+    np++;//每递归调用一次就自加一次，作为判断是否到了最后一个景点
+    p[c]++;
+    if(np==S.count){
+        //到了最后一个景点
+        cout<<S.mat.Pname[c]<<endl;
+        returnMainFace();
+    }else{
+        cout<<S.mat.Pname[c]<<"-->";
+    }
+    visited[c]=1;
+    for(int i=0;i<S.count;i++){
+        if(S.mat.m[c][i]>0&&visited[i]==0){
+            DFS(i);
+            if(S.count>np){
+                cout<<S.mat.Pname[c]<<"-->";
+                p[c]++;
+            }
+        }
+    }
+    if(np==S.count)
+        returnMainFace();
 }
 
-void check_circuit()
+void guide_line()//导游线路
 {
+    checked();
+    cout<<"\n*请输入起始景点的景点编号：";
+    int c;
+    cin>>c;
+    c--;
+    for(int i=0;i<S.count;i++){
+        visited[i]=0;
+        p[i]=0;//入度置初值为0
+    }
+    np=0;
+    cout<<"*形成的导游线路图（采取深度优先策略）如下所示：\n\n\t";
+    DFS(c);
+}
 
+
+
+void check_circuit()//判断的对象是导游线路，判断是否有重复走过的景点)
+{
+    checked();
+    if(np==0){
+        cout<<"\n*缺少合法的导游线路图！\n*请先创建一个合法的导游线路图！\n";
+        returnMainFace();
+    }
+    bool f=true;//true表示没有回路
+    for(int i=0;i<S.count;i++){
+        //p[i]表示景点入度值
+        if(p[i]>1){
+                if(f){
+                    cout<<"\n*该导游线路图存在回路\n线路中的重复走过的景点显示如下：\n\t";
+                    f=false;
+                }
+                cout<<"编号："<<i+1<<","<<"景点名称："<<S.mat.Pname[i]<<"\n\t"<<endl;
+        }
+    }
+    if(f){
+        cout<<"\n\t*未找到存在于该导游线路图中的回路。\n";
+    }
+    returnMainFace();
+}
+
+//Floyd（佛洛依德）算法，A[M][M]表示权值(最短距离)，path[M][M]表示辅助数组，记住最短路径
+void Floyd(int A[M][M],int path[M][M]){
+    int i,j,k;
+    for(i=0;i<S.count;i++){
+        for(j=0;j<S.count;j++){
+            if(S.mat.m[i][j]==0&&i!=j){
+                //如果两点之间没有边相连，则权为无穷大
+                A[i][j]=INF;//INF=999666333
+            }else if(i==j){
+                A[i][j]=0;
+            }else{
+                //S.mat.m[i][j]表示两个景点之间的道路长度
+                A[i][j]=S.mat.m[i][j];
+            }
+            //给所有的path[i][j]赋值
+            if(i!=j&&S.mat.m[i][j]<INF){
+                path[i][j]=i;//?先初始化Path
+            }else{
+                //（i==j&&S.mat.m[i][j]=INF）
+                path[i][j]=-1;
+            }
+        }
+    }
+//        for(i=0;i<S.count;i++){
+//            for(j=0;j<S>count;j++){
+//                cout<<path[i][j]<<'';
+//            }
+//            cout<<endl;
+//        }
+        for(k=0;k<S.count;k++){
+            for(i=0;i<S.count;i++){
+                for(j=0;j<S.count;j++){
+                    if(A[i][j]>A[i][k]+A[k][j]){//如果i->j的权值大于i->k->j的权值
+                        A[i][j]=A[i][k]+A[k][j];
+                        path[i][j]=path[k][j];
+                    }
+                }
+            }
+        }
 }
 
 void min_distance()//最短路径、距离
 {
-
+    checked();
+    int A[M][M],path[M][M];
+    Floyd(A,path);
+    while(true){
+        //system("cls");
+        Num_Name();//编号对应的景点名称
+        int i,j,k,s;
+        int apath[M],d;
+        cout<<"*请输入要查询的最短路径和最短距离的两个景点的编号:\n";
+        cout<<"\t-景点1：";
+        cin>>i;
+        i--;
+        cout<<"\t-景点2：";
+        cin>>j;
+        j--;
+        if(A[i][j]<INF&&i!=j){
+            k=path[i][j];//取值
+            d=0;
+            apath[d]=j;
+            while(k!=-1&&k!=i){
+                d++;
+                apath[d]=k;
+                k=path[i][k];
+            }
+            d++;
+            apath[d]=i;
+            cout<<"\n*从 "<<S.mat.Pname[i]<<" 到 "<<S.mat.Pname[j]<<"  最短路径为：";
+            cout<<S.mat.Pname[apath[d]];
+            for(s=d-1;s>=0;s--){
+                cout<<" -->"<<S.mat.Pname[apath[s]];
+                //cout<<',apath[s]='<<apath[s];
+            }
+            cout<<" ，最短距离为："<<A[i][j]<<endl;
+        }else if(i==j){
+            cout<<"\n*景点输入不合法，输入的两个景点不能相同!\n";
+        }else{
+            cout<<"\n*这两个景点间不存在路径\n";
+        }
+        cout<<"\n是否继续执行最短路径和最短距离的查询（Y/N）";
+        Y_N();
+    }
+    returnMainFace();
 }
 
-void build_road()
+void build_road()//道路修建规划图、最小生成树(prime算法)
 {
-
+    checked();
+    cout<<"\n*道路修建规划图（prime算法）规划如下：\n";
+    int lowcost[M],min,closest[M],i,j,k,v=0,sum=0,num=0;
+    int A[M][M];
+    //赋权值
+    for(i=0;i<S.count;i++){
+        for(j=0;j<S.count;j++){
+            if(S.mat.m[i][j]==0&&i!=j){
+                A[i][j]=INF;
+            }else if(i==j){
+                A[i][j]=0;
+            }else{
+                A[i][j]=S.mat.m[i][j];
+            }
+        }
+    }
+    for(i=0;i<S.count;i++){
+        lowcost[i]=A[v][i];
+        closest[i]=v;
+    }
+    for(i=1;i<S.count;i++){
+        min=INF;
+        for(j=0;j<S.count;j++){
+            if(lowcost[j]!=0&&lowcost[j]<min){
+                min=lowcost[j];
+                k=j;
+            }
+        }
+        if(min<INF){
+            cout<<"\t-第 "<<++num<<" 条路： 从 "<<S.mat.Pname[closest[k]]<<" 到"<<S.mat.Pname[k]<<" , 该道路长度为： "<<min<<endl;
+            sum+=min;
+        }
+        lowcost[k]=0;
+        for(j=0;j<S.count;j++){
+            if(A[k][j]!=0&&A[k][j]<lowcost[j]){
+                lowcost[j]=A[k][j];
+                closest[j]=k;
+            }
+        }
+    }
+    cout<<"*修建道路的总长度为："<<sum<<endl;
+    returnMainFace();
 }
 
 
