@@ -9,9 +9,7 @@ using namespace std;
 #define INF 999666333
 
 //函数声明
-void Welcome();//欢迎界面
 void returnMainFace();//返回主界面
-void MainFace();//主界面
 void create_graph();//创建景区景点图
 void print_graph();//输出景区景点图
 void guide_line();//导游线路
@@ -20,7 +18,7 @@ void checked();//检查是否存在一个合法的景区景点分布图
 void Num_Name();//打印景点编号与景点名称的对应信息
 void Floyd(int A[M][M],int path[M][M]);//Floyd算法
 void Y_N();//选择判断函数
-void check_circuit();//判断回路
+void check_circuit();//判断是否有重复经过的景点
 void min_distance();
 void build_road();
 
@@ -44,20 +42,9 @@ Scenic S;
 int main()
 {
     system("color f4");
-    Welcome();
-    return 0;
-}
-
-
-void Welcome(){
     cout<<"\n\n\t\t******欢迎使用景区旅游信息管理系统******\n\n";
-    cout<<"\t\t\t按任意键进入系统......";
-    getch();
-    MainFace();
-}
-
-void MainFace()//主界面
-{
+    //cout<<"\t\t\t按任意键进入系统......";
+    //getch();
     system("cls");
     cout<<"\n主菜单:\n";
     cout<<"\t1、创建景区景点分布图；\n";
@@ -99,7 +86,9 @@ void MainFace()//主界面
         cout<<"\n\t\t\t*按任意键关闭本系统\n";
         exit(0);
     }
+    return 0;
 }
+
 
 //创建一个景区的邻接矩阵
 void create_graph()//case1
@@ -152,7 +141,7 @@ void create_graph()//case1
 void print_graph()//以邻接矩阵的形式输出景点分布
 {
     checked();
-    cout<<"\n*景区景点分布图（邻接矩阵表示）查询成功！\n";
+    cout<<"\n*景区景点分Ai布图（邻接矩阵表示）查询成功！\n";
     cout<<"*景区名称："<<S.Sname<<endl;
     int i,j;
     cout<<"\n\t-------";
@@ -223,7 +212,7 @@ void guide_line()//导游线路
 {
     checked();
     cout<<"\n*请输入起始景点的景点编号：";
-    int c;
+    int c;Ai
     cin>>c;
     c--;
     for(int i=0;i<S.count;i++){
@@ -236,8 +225,8 @@ void guide_line()//导游线路
 }
 
 
-
-void check_circuit()//判断的对象是导游线路，判断是否有重复走过的景点)
+//判断的对象是导游线路，判断是否有重复走过的景点)
+void check_circuit()
 {
     checked();
     if(np==0){
@@ -261,7 +250,7 @@ void check_circuit()//判断的对象是导游线路，判断是否有重复走�
     returnMainFace();
 }
 
-//Floyd（佛洛依德）算法，A[M][M]表示权值(最短距离)，path[M][M]表示辅助数组，记住最短路径
+//Floyd（佛洛依德）算法，A[M][M]表示最短距离，path[M][M]表示辅助数组，记住前驱
 void Floyd(int A[M][M],int path[M][M]){
     int i,j,k;
     for(i=0;i<S.count;i++){
@@ -277,7 +266,7 @@ void Floyd(int A[M][M],int path[M][M]){
             }
             //给所有的path[i][j]赋值
             if(i!=j&&S.mat.m[i][j]<INF){
-                path[i][j]=i;//?先初始化Path
+                path[i][j]=i;
             }else{
                 //（i==j&&S.mat.m[i][j]=INF）
                 path[i][j]=-1;
@@ -290,12 +279,12 @@ void Floyd(int A[M][M],int path[M][M]){
 //            }
 //            cout<<endl;
 //        }
-        for(k=0;k<S.count;k++){
+        for(k=0;k<S.count;k++){//k 注意放到最外层，让A[i][j]检测都经过每一个k
             for(i=0;i<S.count;i++){
                 for(j=0;j<S.count;j++){
                     if(A[i][j]>A[i][k]+A[k][j]){//如果i->j的权值大于i->k->j的权值
                         A[i][j]=A[i][k]+A[k][j];
-                        path[i][j]=path[k][j];
+                        path[i][j]=path[k][j];//path[k][j]=k前驱?k是指向的下一个景点
                     }
                 }
             }
@@ -306,12 +295,12 @@ void min_distance()//最短路径、距离
 {
     checked();
     int A[M][M],path[M][M];
-    Floyd(A,path);
+    Floyd(A,path);//A是一个景点到另一个景点的最短路径的长度
     while(true){
         //system("cls");
         Num_Name();//编号对应的景点名称
         int i,j,k,s;
-        int apath[M],d;
+        int apath[M],d;//apath[M]是记录路径的数组
         cout<<"*请输入要查询的最短路径和最短距离的两个景点的编号:\n";
         cout<<"\t-景点1：";
         cin>>i;
@@ -320,23 +309,24 @@ void min_distance()//最短路径、距离
         cin>>j;
         j--;
         if(A[i][j]<INF&&i!=j){
-            k=path[i][j];//取值
-            d=0;
-            apath[d]=j;
+            k=path[i][j];//k是指向的下一个景点
+            d=0;//路径有d+2个景点,是数组apath的下标
+            //将待输出的路径的点存放在栈apath中
+            apath[d]=j;//最后一个景点
             while(k!=-1&&k!=i){
                 d++;
                 apath[d]=k;
+                //再继续判断还有没有景点
                 k=path[i][k];
             }
             d++;
-            apath[d]=i;
+            apath[d]=i;//加上第一点
             cout<<"\n*从 "<<S.mat.Pname[i]<<" 到 "<<S.mat.Pname[j]<<"  最短路径为：";
-            cout<<S.mat.Pname[apath[d]];
-            for(s=d-1;s>=0;s--){
+            cout<<S.mat.Pname[apath[d]];//apath[M]数组最后一个，就是第一个起点,相当于栈
+            for(s=d-1;s>=0;s--){//将剩下的景点（apath[M]数组剩下的元素）打印出来
                 cout<<" -->"<<S.mat.Pname[apath[s]];
-                //cout<<',apath[s]='<<apath[s];
             }
-            cout<<" ，最短距离为："<<A[i][j]<<endl;
+            cout<<" ，最短距离为："<<A[i][j]<<endl;//Floyd算法已经将最短路径算出来存放到了A[i][j](将INF的值用最短路径代替了)
         }else if(i==j){
             cout<<"\n*景点输入不合法，输入的两个景点不能相同!\n";
         }else{
@@ -345,14 +335,16 @@ void min_distance()//最短路径、距离
         cout<<"\n是否继续执行最短路径和最短距离的查询（Y/N）";
         Y_N();
     }
-    returnMainFace();
+    returnMainFace();Ai
 }
 
-void build_road()//道路修建规划图、最小生成树(prime算法)
+//道路修建规划图、最小生成树(prime算法)
+void build_road()
 {
     checked();
     cout<<"\n*道路修建规划图（prime算法）规划如下：\n";
-    int lowcost[M],min,closest[M],i,j,k,v=0,sum=0,num=0;
+    //Ai[M]表示待选边的权值,邻接矩阵的一行,closest[M]：点编号数组，记录下一条路的起点景点的编号
+    int Ai[M],min,closest[M],i,j,k,sum=0,num=0;//num表示第几条路
     int A[M][M];
     //赋权值
     for(i=0;i<S.count;i++){
@@ -367,26 +359,28 @@ void build_road()//道路修建规划图、最小生成树(prime算法)
         }
     }
     for(i=0;i<S.count;i++){
-        lowcost[i]=A[v][i];
-        closest[i]=v;
+        Ai[i]=A[0][i];//取第一行存四个Ai[i]，就是一个景点到所有景点的权值
+        closest[i]=0;//0
     }
     for(i=1;i<S.count;i++){
         min=INF;
+        //从Ai[j]中选出最小的值存放在min
         for(j=0;j<S.count;j++){
-            if(lowcost[j]!=0&&lowcost[j]<min){
-                min=lowcost[j];
-                k=j;
+            if(Ai[j]!=0&&Ai[j]<min){
+                min=Ai[j];
+                k=j;//记录最小的值的列j:k=j，为了下面标志此路已选
             }
         }
         if(min<INF){
             cout<<"\t-第 "<<++num<<" 条路： 从 "<<S.mat.Pname[closest[k]]<<" 到"<<S.mat.Pname[k]<<" , 该道路长度为： "<<min<<endl;
-            sum+=min;
+            sum+=min;//sum累计道路长度，即是已选的权值
         }
-        lowcost[k]=0;
+        Ai[k]=0;//标志为已选的边的权值，避免重复选择
+        //例子：对比a到c和b到c的权值，取最小存进Ai[j]中
         for(j=0;j<S.count;j++){
-            if(A[k][j]!=0&&A[k][j]<lowcost[j]){
-                lowcost[j]=A[k][j];
-                closest[j]=k;
+            if(A[k][j]!=0&&A[k][j]<Ai[j]){
+                Ai[j]=A[k][j];
+                closest[j]=k;//点编号数组，记录下一条路的起点景点的编号
             }
         }
     }
@@ -411,13 +405,12 @@ void Y_N()
             returnMainFace();
         }
     }
-
 }
 
 void checked(){
     system("cls");
     if(S.count<=1){
-        cout<<"\n*缺少合法的景区景点分布图！\n*请先创建一个合法的景区景点分布图！\n";
+        cout<<"\n*缺少合法的景区景点分d布图！\n*请先创建一个合法的景区景点分布图！\n";
         returnMainFace();
     }
 }
@@ -432,6 +425,6 @@ void Num_Name(){
 void returnMainFace(){
     cout<<"\n\t\t\t*按任意键返回主菜单......\n";
     getch();
-    system("cls");//调用系统命令
-    MainFace();
+    system("cls");//调用dos命令
+    main();
 }
