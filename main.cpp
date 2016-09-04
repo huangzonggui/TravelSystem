@@ -212,7 +212,7 @@ void guide_line()//导游线路
 {
     checked();
     cout<<"\n*请输入起始景点的景点编号：";
-    int c;Ai
+    int c;
     cin>>c;
     c--;
     for(int i=0;i<S.count;i++){
@@ -335,7 +335,7 @@ void min_distance()//最短路径、距离
         cout<<"\n是否继续执行最短路径和最短距离的查询（Y/N）";
         Y_N();
     }
-    returnMainFace();Ai
+    returnMainFace();
 }
 
 //道路修建规划图、最小生成树(prime算法)
