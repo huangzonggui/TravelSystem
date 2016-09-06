@@ -22,7 +22,7 @@ void Y_N();//选择判断函数
 void check_circuit();//判断是否有重复经过的景点
 void min_distance();
 void build_road();
-void write_file();
+void save_file();
 void read_file();
 void add_scenic();
 
@@ -87,7 +87,7 @@ int main()
         build_road();//最小生成树
         break;
     case '7':
-        write_file();
+        save_file();
         break;
     case '8':
         read_file();
@@ -451,7 +451,7 @@ void returnMainFace(){
 }
 
 //将景区保存到文件
-void write_file(){
+void save_file(){
     checked();
     string outfilename;
     ofstream outfile;//建立ofstream对象
@@ -475,6 +475,7 @@ void write_file(){
         }
         //关闭对象与文件之间的联接
         outfile.close();
+        cout<<"保存文件成功！"<<endl;
     }else{
         cout<<"不能打开文件!"<<endl;
     }
@@ -483,6 +484,18 @@ void write_file(){
 
 //读取指定文件名的景区景点
 void read_file(){
+    //将之前的数据清零
+    S.Sname="";
+    S.edge=0;
+    for(int i=0;i<S.count;i++){
+        S.mat.Pname[i]="";
+        for(int j=0;j<S.count;j++){
+            //全部初始化为0
+            S.mat.m[i][j]=0;
+        }
+    }
+    S.count=0;
+
     ifstream infile;
     string s,filename;
     bool flag=true;
