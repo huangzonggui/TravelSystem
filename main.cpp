@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -21,6 +22,7 @@ void Y_N();//选择判断函数
 void check_circuit();//判断是否有重复经过的景点
 void min_distance();
 void build_road();
+void read_file();
 
 //定义数据结构
 struct Matrix
@@ -43,16 +45,14 @@ int main()
 {
     system("color f4");
     cout<<"\n\n\t\t******欢迎使用景区旅游信息管理系统******\n\n";
-    //cout<<"\t\t\t按任意键进入系统......";
-    //getch();
-    system("cls");
     cout<<"\n主菜单:\n";
     cout<<"\t1、创建景区景点分布图；\n";
-    cout<<"\t2、输出景区景点分布图（邻接矩阵）；\n";
+    cout<<"\t2、景区景点分布图（邻接矩阵）；\n";
     cout<<"\t3、输出导游线路图；\n";
     cout<<"\t4、判断导游线路图有无回路；\n";
     cout<<"\t5、求两个景点间的最短路径和最短距离；\n";
     cout<<"\t6、输出道路修建规划图；\n";
+    cout<<"\t7、读取文件中的景区景点：\n";
     cout<<"\t0、退出。\n";
     cout<<"\n*请输入操作选择；";
     char c;
@@ -82,6 +82,9 @@ int main()
     case '6':
         build_road();//最小生成树
         break;
+    case '7':
+        read_file();
+        break;
     case '0':
         cout<<"\n\t\t\t*按任意键关闭本系统\n";
         exit(0);
@@ -93,6 +96,7 @@ int main()
 //创建一个景区的邻接矩阵
 void create_graph()//case1
 {
+
     if(S.count>0)
     {
         cout<<"\n*当前已存在一个景区景点分布图！\n*继续操作将覆盖该景区景点分布图!(Y/N）";
@@ -135,6 +139,29 @@ void create_graph()//case1
         S.mat.m[n2][n1]=S.mat.m[n1][n2];
     }
     cout<<"\n*景区创建成功！";
+    //将景区写入文件
+    string outfilename;
+    ofstream outfile;
+    cout<<"将景区景点保存为文件的文件名：";
+    cin>>outfilename;
+    //remove("outfile.txt");
+    //outfile.open("outfile.txt");
+    outfile.open(outfilename.c_str());
+    outfile<<S.Sname<<endl;
+    if(outfile.is_open()){
+        outfile<<S.count<<endl;
+        for(int i=0;i<S.count;i++){
+            outfile<<S.mat.Pname[i]<<endl;
+        }
+        for(int i=0;i<S.count;i++){
+            for(int j=0;j<S.count;j++){
+            outfile<<S.mat.m[i][j]<<endl;
+        }
+    }
+        outfile.close();
+    }else{
+        cout<<"不能打开文件!"<<endl;
+    }
     returnMainFace();
 }
 
@@ -150,7 +177,6 @@ void print_graph()//以邻接矩阵的形式输出景点分布
     }
     cout<<endl;
     cout<<"\t|编号|";
-    //cout<<"   |";
     for(i=0;i<S.count;i++){
         cout<<' '<<i+1<<' ';
     }
@@ -273,12 +299,6 @@ void Floyd(int A[M][M],int path[M][M]){
             }
         }
     }
-//        for(i=0;i<S.count;i++){
-//            for(j=0;j<S>count;j++){
-//                cout<<path[i][j]<<'';
-//            }
-//            cout<<endl;
-//        }
         for(k=0;k<S.count;k++){//k 注意放到最外层，让A[i][j]检测都经过每一个k
             for(i=0;i<S.count;i++){
                 for(j=0;j<S.count;j++){
@@ -297,17 +317,31 @@ void min_distance()//最短路径、距离
     int A[M][M],path[M][M];
     Floyd(A,path);//A是一个景点到另一个景点的最短路径的长度
     while(true){
-        //system("cls");
         Num_Name();//编号对应的景点名称
         int i,j,k,s;
         int apath[M],d;//apath[M]是记录路径的数组
-        cout<<"*请输入要查询的最短路径和最短距离的两个景点的编号:\n";
-        cout<<"\t-景点1：";
-        cin>>i;
-        i--;
-        cout<<"\t-景点2：";
-        cin>>j;
-        j--;
+        bool flag=true;
+        while(flag){
+            cout<<"\t-景点1：";
+            cin>>i;
+            i--;
+            if(i<0||i>S.count-1){
+            cout<<"*请输入合法的景点编号:\n";
+            }else{
+                flag=false;
+            }
+        }
+        flag=true;
+        while(flag){
+            cout<<"\t-景点2：";
+            cin>>j;
+            j--;
+            if(j<0||j>S.count-1){
+                cout<<"*请输入合法的景点编号:\n";
+            }else{
+                flag=false;
+            }
+        }
         if(A[i][j]<INF&&i!=j){
             k=path[i][j];//k是指向的下一个景点
             d=0;//路径有d+2个景点,是数组apath的下标
@@ -427,4 +461,35 @@ void returnMainFace(){
     getch();
     system("cls");//调用dos命令
     main();
+}
+
+void read_file(){
+    //ifstream infile;
+    ifstream infile;
+    string filename;
+    bool flag=true;
+
+    while(flag){//判断是否存在此文件
+        cout<<"请输入文件名：";
+        cin>>filename;
+        infile.open(filename.c_str(),ios::in);
+        if(!infile){
+            cout<<"打开失败，没有此文件"<<endl;
+        }else{
+            flag=false;
+        }
+    }
+
+    infile>>S.Sname;
+    infile>>S.count;
+    for(int i=0;i<S.count;i++){
+          infile>>S.mat.Pname[i];
+    }
+    for(int i=0;i<S.count;i++){
+        for(int j=0;j<S.count;j++){
+            infile>>S.mat.m[i][j];
+        }
+    }
+    infile.close();
+    print_graph();
 }
