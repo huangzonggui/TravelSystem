@@ -22,7 +22,9 @@ void Y_N();//选择判断函数
 void check_circuit();//判断是否有重复经过的景点
 void min_distance();
 void build_road();
+void write_file();
 void read_file();
+void add_scenic();
 
 //定义数据结构
 struct Matrix
@@ -43,7 +45,7 @@ Scenic S;
 
 int main()
 {
-    system("color f4");
+    system("color e4");
     cout<<"\n\n\t\t******欢迎使用景区旅游信息管理系统******\n\n";
     cout<<"\n主菜单:\n";
     cout<<"\t1、创建景区景点分布图；\n";
@@ -52,13 +54,15 @@ int main()
     cout<<"\t4、判断导游线路图有无回路；\n";
     cout<<"\t5、求两个景点间的最短路径和最短距离；\n";
     cout<<"\t6、输出道路修建规划图；\n";
-    cout<<"\t7、读取文件中的景区景点：\n";
+    cout<<"\t7、将景区景点分布图保存；\n";
+    cout<<"\t8、读取指定文件名的景区景点分布图；\n";
+    cout<<"\t9、为当前的景区添加景点道路；\n";
     cout<<"\t0、退出。\n";
-    cout<<"\n*请输入操作选择；";
+    cout<<"\n*请输入操作选择:";
     char c;
-    c=getch();/*从键盘上读入一个字符不回显送给字符变量c*/
+    c=getch();/*从键盘上自动读取一个字符，不回显送给字符变量c*/
     cout<<c<<endl;
-    while(!c>='0'&&c<='6'){
+    while(!(c>='0'&&c<='9')){
         cout<<"*输入有误，请重新输入：";
         c=getch();
         cout<<c<<endl;
@@ -83,7 +87,13 @@ int main()
         build_road();//最小生成树
         break;
     case '7':
+        write_file();
+        break;
+    case '8':
         read_file();
+        break;
+    case '9':
+        add_scenic();
         break;
     case '0':
         cout<<"\n\t\t\t*按任意键关闭本系统\n";
@@ -139,36 +149,13 @@ void create_graph()//case1
         S.mat.m[n2][n1]=S.mat.m[n1][n2];
     }
     cout<<"\n*景区创建成功！";
-    //将景区写入文件
-    string outfilename;
-    ofstream outfile;
-    cout<<"将景区景点保存为文件的文件名：";
-    cin>>outfilename;
-    //remove("outfile.txt");
-    //outfile.open("outfile.txt");
-    outfile.open(outfilename.c_str());
-    outfile<<S.Sname<<endl;
-    if(outfile.is_open()){
-        outfile<<S.count<<endl;
-        for(int i=0;i<S.count;i++){
-            outfile<<S.mat.Pname[i]<<endl;
-        }
-        for(int i=0;i<S.count;i++){
-            for(int j=0;j<S.count;j++){
-            outfile<<S.mat.m[i][j]<<endl;
-        }
-    }
-        outfile.close();
-    }else{
-        cout<<"不能打开文件!"<<endl;
-    }
     returnMainFace();
 }
 
 void print_graph()//以邻接矩阵的形式输出景点分布
 {
     checked();
-    cout<<"\n*景区景点分Ai布图（邻接矩阵表示）查询成功！\n";
+    cout<<"\n*景区景点分布图（邻接矩阵表示）查询成功！\n";
     cout<<"*景区名称："<<S.Sname<<endl;
     int i,j;
     cout<<"\n\t-------";
@@ -294,7 +281,7 @@ void Floyd(int A[M][M],int path[M][M]){
             if(i!=j&&S.mat.m[i][j]<INF){
                 path[i][j]=i;
             }else{
-                //（i==j&&S.mat.m[i][j]=INF）
+                //（i==j&&S.mat.m[i][j]=INF
                 path[i][j]=-1;
             }
         }
@@ -326,7 +313,7 @@ void min_distance()//最短路径、距离
             cin>>i;
             i--;
             if(i<0||i>S.count-1){
-            cout<<"*请输入合法的景点编号:\n";
+                cout<<"*请输入合法的景点编号:\n";
             }else{
                 flag=false;
             }
@@ -463,16 +450,49 @@ void returnMainFace(){
     main();
 }
 
+//将景区保存到文件
+void write_file(){
+    checked();
+    string outfilename;
+    ofstream outfile;//建立ofstream对象
+    cout<<"将景区景点保存为文件的文件名：";
+    cin>>outfilename;
+    //建立对象与文件之间的联接
+    string s="file/"+outfilename;
+    const char* path=s.c_str();
+    outfile.open(path,ios::trunc);//c_str()函数返回一个指向正规C字符串的指针, 内容与本string串相同  ios::trunc:如果文件已存在则先删除该文件
+    if(outfile.is_open()){
+        outfile<<S.Sname<<endl;//将景区的名称输出
+        outfile<<S.count<<endl;
+        outfile<<S.edge<<endl;
+        for(int i=0;i<S.count;i++){
+            outfile<<S.mat.Pname[i]<<endl;//将景区景点的名称输出
+        }
+        for(int i=0;i<S.count;i++){
+            for(int j=0;j<S.count;j++){
+                outfile<<S.mat.m[i][j]<<endl;//将邻接矩阵的每个元素输出
+            }
+        }
+        //关闭对象与文件之间的联接
+        outfile.close();
+    }else{
+        cout<<"不能打开文件!"<<endl;
+    }
+    returnMainFace();
+}
+
+//读取指定文件名的景区景点
 void read_file(){
-    //ifstream infile;
     ifstream infile;
-    string filename;
+    string s,filename;
     bool flag=true;
 
     while(flag){//判断是否存在此文件
         cout<<"请输入文件名：";
         cin>>filename;
-        infile.open(filename.c_str(),ios::in);
+        s="file/"+filename;
+        const char* path=s.c_str();
+        infile.open(path,ios::in);
         if(!infile){
             cout<<"打开失败，没有此文件"<<endl;
         }else{
@@ -482,6 +502,7 @@ void read_file(){
 
     infile>>S.Sname;
     infile>>S.count;
+    infile>>S.edge;
     for(int i=0;i<S.count;i++){
           infile>>S.mat.Pname[i];
     }
@@ -492,4 +513,40 @@ void read_file(){
     }
     infile.close();
     print_graph();
+}
+
+//给当前景区添加景点
+void add_scenic(){
+    checked();
+    int a,b;
+    cout<<"\n*请输入要在该景区中添加景点总数目：";
+    cin>>a;
+    S.count=S.count+a;
+    cout<<"\n*请输入要在该景区中添加道路总数目：";
+    cin>>b;
+    S.edge=S.edge+b;
+    cout<<"\n*请添加道路、景点编号、名称及道路的长度\n";
+    cout<<"\t (格式：景点输入请按照小号在前大号在后的原则，景点编号从1开始)";
+    for(int i=S.edge-b;i<S.edge;i++){
+        cout<<"\n*第"<<i+1<<"条道路\n";
+        int n1,n2;
+        //编号输入从1开始，矩阵下标从零开始,所以要自减一
+        cout<<"\t-道路起点景点编号：";
+        cin>>n1;
+        n1--;
+        cout<<"\t-道路起点景点名称：";
+        cin>>S.mat.Pname[n1];
+
+        cout<<"\t-道路终点景点编号：";
+        cin>>n2;
+        n2--;
+        cout<<"\t-道路终点景点名称：";
+        cin>>S.mat.Pname[n2];
+
+        cout<<"\t-两个景点之间的道路长度：";
+        cin>>S.mat.m[n1][n2];
+        S.mat.m[n2][n1]=S.mat.m[n1][n2];
+    }
+    cout<<"\n*景区添加景点成功！";
+    returnMainFace();
 }
